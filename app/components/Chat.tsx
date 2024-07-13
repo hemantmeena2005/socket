@@ -12,7 +12,7 @@ interface Message {
   timestamp: string;
 }
 
-const socket = io();
+const socket = io({ path: '/socket.io' });
 
 const Chat = () => {
   const { userId } = useAuth();

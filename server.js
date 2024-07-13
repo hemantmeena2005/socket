@@ -1,11 +1,13 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
-const socketIo = require('socket.io');
+import { createServer } from 'http';
+import { parse } from 'url';
+import next from 'next';
+import { Server as SocketIoServer } from 'socket.io';
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
+
+const port = process.env.PORT || 3000; // Vercel provides the PORT environment variable
 
 app.prepare().then(() => {
   const server = createServer((req, res) => {
@@ -13,7 +15,9 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   });
 
-  const io = socketIo(server);
+  const io = new SocketIoServer(server, {
+    path: '/socket.io',
+  });
 
   io.on('connection', (socket) => {
     console.log('A user connected');
@@ -27,8 +31,14 @@ app.prepare().then(() => {
     });
   });
 
-  server.listen(3000, (err) => {
-    if (err) throw err;
-    console.log('> Ready on http://localhost:3000');
+  server.listen(port, (err) => {
+    if (err) {
+      console.error('Server failed to start:', err);
+      process.exit(1);
+    }
+    console.log(`> Ready on http://localhost:${port}`);
   });
+}).catch((err) => {
+  console.error('Failed to prepare the app:', err);
+  process.exit(1);
 });
